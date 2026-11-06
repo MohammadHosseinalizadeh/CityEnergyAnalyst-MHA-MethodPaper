@@ -155,3 +155,11 @@ capacity = df['GRID_hs_kWh'].max()  # WRONG
 - `cea/technologies/blinds.py` - Shading activation logic
 - `cea/demand/building_solar.py:117-123` - Shading application
 - `cea/databases/AGENTS.md` - HVAC vs SUPPLY distinction
+
+## Ventilation schedule modes
+`occupancy:ventilation-mode` selects `people` (default) or constant `area` flow.
+Area flow uses conditioned `Af` and `ventilation-area-rate-lpsm2`; it changes only
+`Ve_lps`, not occupants or their gains. Demand subtracts infiltration from the
+ventilation requirement by default; `demand:subtract-infiltration-from-ventilation=false`
+keeps infiltration as an additional load. Regenerate occupancy before demand
+after switching modes.

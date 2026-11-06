@@ -118,3 +118,9 @@ setup/Dependencies/cityenergyanalyst.tar.gz
 # project folders here; teardown removes them on success but
 # fixture-setup errors leave stragglers behind.
 .tmp-pathway-api/
+
+# Local GUI checkout and simulation projects (separate Git repository)
+/CityEnergyAnalyst-GUI/
+
+# Machine-local Claude settings
+/.claude/settings.local.json

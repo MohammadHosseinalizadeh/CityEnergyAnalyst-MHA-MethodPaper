@@ -22,7 +22,7 @@ H_F = 3.0  # average height per floor in m
 D = 20.0  # in mm the diameter of the pipe to calculate losses
 
 # HVAC SYSTEMS & VENTILATION
-ETA_REC = 0.75  # constant efficiency of Heat recovery
+ETA_REC = 0.45  # constant efficiency of Heat recovery
 DELTA_P_DIM = 5.0  # (Pa) dimensioning differential pressure for multi-storey building shielded from wind,
                  # according to DIN 1946-6
 P_FAN = 0.55  # specific fan consumption in W/m3/h

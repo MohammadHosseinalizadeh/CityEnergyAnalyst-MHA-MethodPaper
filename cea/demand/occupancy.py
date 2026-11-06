@@ -16,6 +16,8 @@ from cea.datamanagement.schedule_helper import read_cea_schedule
 from cea.datamanagement.utils import migrate_void_deck_data
 from cea.demand.building_properties import calc_useful_areas
 from cea.demand.constants import VARIABLE_CEA_SCHEDULE_RELATION
+from cea.demand.mubes_appliances import load_mubes_profile_for_building
+from cea.demand.ventilation_schedule import ventilation_schedule
 from cea.utilities import epwreader
 from cea.utilities.date import get_date_range_hours_from_year
 from typing import List
@@ -82,7 +84,12 @@ def occupancy_main(locator: cea.inputlocator.InputLocator, config: cea.config.Co
                                    [internal_loads.loc[b] for b in buildings],
                                    [indoor_comfort.loc[b] for b in buildings],
                                    [prop_geometry.loc[b] for b in buildings],
-                                   repeat(stochastic_schedule, n))
+                                   repeat(stochastic_schedule, n),
+                                   repeat(config.occupancy.use_mubes_appliance_profiles, n),
+                                   repeat(config.occupancy.mubes_appliance_profiles_folder, n),
+                                   repeat(config.occupancy.mubes_appliance_profile_map, n),
+                                   repeat(config.occupancy.ventilation_mode, n),
+                                   repeat(config.occupancy.ventilation_area_rate_lpsm2, n))
     return None
 
 
@@ -96,7 +103,12 @@ def calc_schedules(locator,
                    internal_loads_building,
                    indoor_comfort_building,
                    prop_geometry_building,
-                   stochastic_schedule):
+                   stochastic_schedule,
+                   use_mubes_appliance_profiles=False,
+                   mubes_appliance_profiles_folder="",
+                   mubes_appliance_profile_map="",
+                   ventilation_mode="people",
+                   ventilation_area_rate_lpsm2=0.35):
     """
     Calculate the profile of occupancy, electricity demand and domestic hot water consumption from the input schedules.
     For variables that depend on the number of people (humidity gains, heat gains and ventilation demand), additional
@@ -153,7 +165,10 @@ def calc_schedules(locator,
         final_schedule[variable] = final_schedule['Occ_m2p'] * internal_loads_building[variable]
 
     # VENTILATION SCHEDULE
-    final_schedule['Ve_lps'] = final_schedule['Occ_m2p'] * indoor_comfort_building['Ve_lsp']
+    final_schedule['Ve_lps'] = ventilation_schedule(
+        final_schedule['Occ_m2p'], indoor_comfort_building['Ve_lsp'],
+        prop_geometry_building['Af'] if ventilation_mode == 'area' else 0.0,
+        ventilation_mode, ventilation_area_rate_lpsm2)
 
     # SCHEDULE FOR WATER CONSUMPTION
     for variable in ['Vww_ldp', 'Vw_ldp']:
@@ -175,7 +190,16 @@ def calc_schedules(locator,
 
     # APPLIANCE ELECTRICITY SCHEDULE
     variable = 'Ea_Wm2'
-    if internal_loads_building[variable] > 0.0:
+    mubes_appliance_profile = None
+    if use_mubes_appliance_profiles:
+        mubes_appliance_profile = load_mubes_profile_for_building(
+            building,
+            mubes_appliance_profiles_folder,
+            mubes_appliance_profile_map)
+
+    if mubes_appliance_profile is not None:
+        final_schedule[variable] = mubes_appliance_profile["hourly_watts"]
+    elif internal_loads_building[variable] > 0.0:
         array = daily_schedule_building[VARIABLE_CEA_SCHEDULE_RELATION[variable]]
         # base load is independent of occupants
         base_load = np.min(array)

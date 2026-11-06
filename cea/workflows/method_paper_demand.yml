@@ -1,0 +1,21 @@
+# Set METHOD_PAPER_SCENARIO and MUBES_APPLIANCE_PROFILES_FOLDER first.
+# Radiation results must already exist for the selected scenario.
+- config: default
+  "general:scenario": "${METHOD_PAPER_SCENARIO}"
+  "general:debug": false
+  "general:multiprocessing": true
+  "general:number-of-cpus-to-keep-free": 1
+  "occupancy:buildings": ""
+  "occupancy:occupancy-model": deterministic
+  "occupancy:ventilation-mode": area
+  "occupancy:ventilation-area-rate-lpsm2": 0.35
+  "occupancy:use-mubes-appliance-profiles": true
+  "occupancy:mubes-appliance-profiles-folder": "${MUBES_APPLIANCE_PROFILES_FOLDER}"
+  "occupancy:mubes-appliance-profile-map": ""
+  "demand:buildings": ""
+  "demand:appliance-heat-gain-fraction": 0.55
+  "demand:use-dynamic-infiltration-calculation": false
+  "demand:subtract-infiltration-from-ventilation": false
+  "demand:overheating-warning": false
+- script: occupancy
+- script: demand

@@ -567,30 +567,51 @@ class RadiationSimplifiedSection(Section):
 
 class OccupancySection(Section):
     """Typed section for occupancy configuration"""
+    ventilation_mode: Optional[str]
+    ventilation_area_rate_lpsm2: float
     occupancy_model: Optional[str]
     buildings: list[str]
+    use_mubes_appliance_profiles: bool
+    mubes_appliance_profiles_folder: Any
+    mubes_appliance_profile_map: Any
 
+    @overload
+    def __getattr__(self, item: Literal["ventilation_mode"]) -> Optional[str]: ...
+    @overload
+    def __getattr__(self, item: Literal["ventilation_area_rate_lpsm2"]) -> float: ...
     @overload
     def __getattr__(self, item: Literal["occupancy_model"]) -> Optional[str]: ...
     @overload
     def __getattr__(self, item: Literal["buildings"]) -> list[str]: ...
+    @overload
+    def __getattr__(self, item: Literal["use_mubes_appliance_profiles"]) -> bool: ...
+    @overload
+    def __getattr__(self, item: Literal["mubes_appliance_profiles_folder"]) -> Any: ...
+    @overload
+    def __getattr__(self, item: Literal["mubes_appliance_profile_map"]) -> Any: ...
     def __getattr__(self, item: str) -> Any: ...
 
 class DemandSection(Section):
     """Typed section for demand configuration"""
     buildings: list[str]
     use_dynamic_infiltration_calculation: bool
+    subtract_infiltration_from_ventilation: bool
     overheating_warning: bool
     retain_technical_results: bool
+    appliance_heat_gain_fraction: float
 
     @overload
     def __getattr__(self, item: Literal["buildings"]) -> list[str]: ...
     @overload
     def __getattr__(self, item: Literal["use_dynamic_infiltration_calculation"]) -> bool: ...
     @overload
+    def __getattr__(self, item: Literal["subtract_infiltration_from_ventilation"]) -> bool: ...
+    @overload
     def __getattr__(self, item: Literal["overheating_warning"]) -> bool: ...
     @overload
     def __getattr__(self, item: Literal["retain_technical_results"]) -> bool: ...
+    @overload
+    def __getattr__(self, item: Literal["appliance_heat_gain_fraction"]) -> float: ...
     def __getattr__(self, item: str) -> Any: ...
 
 class FinalEnergySection(Section):

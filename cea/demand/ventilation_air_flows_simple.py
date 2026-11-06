@@ -27,7 +27,11 @@ ETA_REC = constants.ETA_REC  # constant efficiency of Heat recovery
 DELTA_P_DIM = constants.DELTA_P_DIM
 
 
-def calc_air_mass_flow_mechanical_ventilation(bpr: BuildingPropertiesRow, tsd: TimeSeriesData, t: int):
+def calc_air_mass_flow_mechanical_ventilation(
+        bpr: BuildingPropertiesRow,
+        tsd: TimeSeriesData,
+        t: int,
+        subtract_infiltration_from_ventilation: bool = True):
     """
     Calculates minimum mass flow rate of mechanical ventilation at time step t according to ventilation control options and
      building systems properties
@@ -49,8 +53,11 @@ def calc_air_mass_flow_mechanical_ventilation(bpr: BuildingPropertiesRow, tsd: T
             and not control_ventilation_systems.is_night_flushing_active(bpr, tsd, t)\
             and not control_ventilation_systems.is_economizer_active(bpr, tsd, t):
 
-        # mechanical ventilation fulfills requirement - minimum ventilation provided by infiltration (similar to CO2 sensor)
-        m_ve_mech = max(tsd.ventilation_mass_flows.m_ve_required[t] - tsd.ventilation_mass_flows.m_ve_inf[t], 0.0)
+        if subtract_infiltration_from_ventilation:
+            # mechanical ventilation fulfills requirement - minimum ventilation provided by infiltration (similar to CO2 sensor)
+            m_ve_mech = max(tsd.ventilation_mass_flows.m_ve_required[t] - tsd.ventilation_mass_flows.m_ve_inf[t], 0.0)
+        else:
+            m_ve_mech = tsd.ventilation_mass_flows.m_ve_required[t]
 
     elif control_ventilation_systems.has_mechanical_ventilation(bpr) \
             and control_ventilation_systems.is_night_flushing_active(bpr, tsd, t):
@@ -79,7 +86,11 @@ def calc_air_mass_flow_mechanical_ventilation(bpr: BuildingPropertiesRow, tsd: T
     return
 
 
-def calc_air_mass_flow_window_ventilation(bpr: BuildingPropertiesRow, tsd: TimeSeriesData, t: int):
+def calc_air_mass_flow_window_ventilation(
+        bpr: BuildingPropertiesRow,
+        tsd: TimeSeriesData,
+        t: int,
+        subtract_infiltration_from_ventilation: bool = True):
     """
     Calculates mass flow rate of window ventilation at time step t according to ventilation control options and
      building systems properties
@@ -100,8 +111,11 @@ def calc_air_mass_flow_window_ventilation(bpr: BuildingPropertiesRow, tsd: TimeS
     if control_ventilation_systems.is_window_ventilation_active(bpr, tsd, t) \
             and not control_ventilation_systems.is_night_flushing_active(bpr, tsd, t):
 
-        # window ventilation fulfills requirement (control by occupants similar to CO2 sensor)
-        m_ve_window = max(tsd.ventilation_mass_flows.m_ve_required[t] - tsd.ventilation_mass_flows.m_ve_inf[t], 0)
+        if subtract_infiltration_from_ventilation:
+            # window ventilation fulfills requirement (control by occupants similar to CO2 sensor)
+            m_ve_window = max(tsd.ventilation_mass_flows.m_ve_required[t] - tsd.ventilation_mass_flows.m_ve_inf[t], 0)
+        else:
+            m_ve_window = tsd.ventilation_mass_flows.m_ve_required[t]
         # TODO: check window ventilation calculation, there are some methods in SIA2044
 
     elif control_ventilation_systems.is_window_ventilation_active(bpr, tsd, t) \

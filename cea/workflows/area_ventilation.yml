@@ -1,0 +1,7 @@
+# Uses the currently selected scenario. Radiation results must already exist.
+# Change ventilation-mode to people to use occupancy × Ve_lsp instead.
+- script: occupancy
+  parameters:
+    ventilation-mode: area
+    ventilation-area-rate-lpsm2: 0.35
+- script: demand

@@ -291,7 +291,7 @@ def calc_phi_i_p(Qs: float) -> float:  # _Wp, people):
     return Qs # phi_i_p
 
 
-def calc_phi_i_a(Eaf: float, Epro: float) -> float:
+def calc_phi_i_a(Eaf: float, Epro: float, appliance_heat_gain_fraction: float = 0.9) -> float:
     """internal gains from appliances and industrial processes.
 
     :param Eaf: appliance load in W
@@ -301,9 +301,8 @@ def calc_phi_i_a(Eaf: float, Epro: float) -> float:
     :return: `phi_i_a`, total internal gain due to appliances and industrial processes in [W]
     :rtype: float
     """
-    # internal gains from appliances, factor of 0.9 taken from old method calc_Qgain_sen()
-    # TODO make function and dynamic, check factor
-    phi_i_a = 0.9 * (Eaf + Epro)
+    # Process gains keep the historical 0.9 factor; appliance gains can be calibrated separately.
+    phi_i_a = appliance_heat_gain_fraction * Eaf + 0.9 * Epro
     return phi_i_a
 
 
@@ -768,8 +767,8 @@ def calc_rc_model_temperatures(phi_hc_cv, phi_hc_r, bpr: BuildingPropertiesRow, 
 
     T_int, theta_c, theta_m, theta_o, theta_ea, theta_ec, theta_em, h_ea, h_ec, h_em, h_op_m \
         = _calc_rc_model_temperatures(Ea, El, Epro, Htr_op, Htr_w, I_sol, Qs, T_ext, a_m, a_t, a_w, c_m, m_ve_inf,
-                                                                     m_ve_mech, m_ve_window, phi_hc_cv,
-                                                                     phi_hc_r, theta_m_t_1, theta_ve_mech)
+                                      m_ve_mech, m_ve_window, phi_hc_cv, phi_hc_r, theta_m_t_1, theta_ve_mech,
+                                      config.demand.appliance_heat_gain_fraction)
 
     if T_WARNING_LOW > T_int or T_WARNING_LOW > theta_c or T_WARNING_LOW > theta_m \
             or T_int > T_WARNING_HIGH or theta_c > T_WARNING_HIGH or theta_m > T_WARNING_HIGH:
@@ -792,7 +791,7 @@ def calc_rc_model_temperatures(phi_hc_cv, phi_hc_r, bpr: BuildingPropertiesRow, 
 
 def _calc_rc_model_temperatures(Eaf, Elf, Epro, Htr_op, Htr_w, I_sol, Qs, T_ext, a_m, a_t, a_w, c_m,
                                 m_ve_inf_simple, m_ve_mech, m_ve_window, phi_hc_cv, phi_hc_r, theta_m_t_1,
-                                theta_ve_mech):
+                                theta_ve_mech, appliance_heat_gain_fraction=0.9):
     # numba_cc compatible calculation
     h_ec = calc_h_ec(Htr_w=Htr_w)
     h_ac = calc_h_ac(a_t)
@@ -805,7 +804,8 @@ def _calc_rc_model_temperatures(Eaf, Elf, Epro, Htr_op, Htr_w, I_sol, Qs, T_ext,
     f_im = calc_f_im(a_t=a_t, a_m=a_m)
     f_sm = calc_f_sm(a_t=a_t, a_m=a_m, a_w=a_w)
     phi_i_l = calc_phi_i_l(Elf=Elf)
-    phi_i_a = calc_phi_i_a(Eaf=Eaf, Epro=Epro) # include processes
+    phi_i_a = calc_phi_i_a(
+        Eaf=Eaf, Epro=Epro, appliance_heat_gain_fraction=appliance_heat_gain_fraction) # include processes
     phi_i_p = calc_phi_i_p(Qs=Qs)
     h_1 = calc_h_1(h_ea=h_ea, h_ac=h_ac)
     phi_a = calc_phi_a(phi_hc_cv, phi_i_l, phi_i_a, phi_i_p, I_sol)

@@ -233,8 +233,10 @@ def calc_Qhs_Qcs(bpr: BuildingPropertiesRow,
             tsd.ventilation_mass_flows.m_ve_inf[t] = max(qm_sum_in / 3600, 1 / 3600)
 
         # ventilation air flows [kg/s]
-        ventilation_air_flows_simple.calc_air_mass_flow_mechanical_ventilation(bpr, tsd, t)
-        ventilation_air_flows_simple.calc_air_mass_flow_window_ventilation(bpr, tsd, t)
+        ventilation_air_flows_simple.calc_air_mass_flow_mechanical_ventilation(
+            bpr, tsd, t, config.demand.subtract_infiltration_from_ventilation)
+        ventilation_air_flows_simple.calc_air_mass_flow_window_ventilation(
+            bpr, tsd, t, config.demand.subtract_infiltration_from_ventilation)
 
         # ventilation air temperature and humidity
         ventilation_air_flows_simple.calc_theta_ve_mech(bpr, tsd, t)

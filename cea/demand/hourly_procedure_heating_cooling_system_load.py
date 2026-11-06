@@ -66,7 +66,7 @@ def calc_heating_cooling_loads(bpr: BuildingPropertiesRow, tsd: TimeSeriesData, 
         update_tsd_no_cooling(tsd, t)
 
         # for dashboard
-        detailed_thermal_balance_to_tsd(tsd, bpr, t, rc_model_temperatures)
+        detailed_thermal_balance_to_tsd(tsd, bpr, t, rc_model_temperatures, config)
 
     elif control_heating_cooling_systems.is_cooling_season(t, bpr) \
             and not control_heating_cooling_systems.is_heating_season(t, bpr):
@@ -110,7 +110,7 @@ def calc_heating_cooling_loads(bpr: BuildingPropertiesRow, tsd: TimeSeriesData, 
         update_tsd_no_heating(tsd, t)
 
         # for dashboard
-        detailed_thermal_balance_to_tsd(tsd, bpr, t, rc_model_temperatures)
+        detailed_thermal_balance_to_tsd(tsd, bpr, t, rc_model_temperatures, config)
 
     else:
         warnings.warn('Timestep %s not in heating season nor cooling season' % t)
@@ -718,7 +718,7 @@ def update_tsd_no_cooling(tsd: TimeSeriesData, t):
     return
 
 
-def detailed_thermal_balance_to_tsd(tsd: TimeSeriesData, bpr: BuildingPropertiesRow, t, rc_model_temperatures):
+def detailed_thermal_balance_to_tsd(tsd: TimeSeriesData, bpr: BuildingPropertiesRow, t, rc_model_temperatures, config):
     """
     Back calculate energy flows in RC model for dashboard of energy balance visualization
 
@@ -732,7 +732,8 @@ def detailed_thermal_balance_to_tsd(tsd: TimeSeriesData, bpr: BuildingProperties
     # internal gains from lights
     tsd.energy_balance_dashboard.Q_gain_sen_light[t] = rc_model_SIA.calc_phi_i_l(tsd.electrical_loads.El[t])
     # internal gains from appliances, data centres and losses from refrigeration
-    tsd.energy_balance_dashboard.Q_gain_sen_app[t] = (rc_model_SIA.calc_phi_i_a(tsd.electrical_loads.Ea[t], tsd.electrical_loads.Epro[t]) - 0.9*tsd.electrical_loads.Epro[t])/0.9
+    tsd.energy_balance_dashboard.Q_gain_sen_app[t] = (
+        config.demand.appliance_heat_gain_fraction * tsd.electrical_loads.Ea[t])
     tsd.energy_balance_dashboard.Q_gain_sen_pro[t] = tsd.electrical_loads.Epro[t]
     tsd.energy_balance_dashboard.Q_gain_sen_data[t] = tsd.cooling_loads.Qcdata_sys[t]
     tsd.energy_balance_dashboard.Q_loss_sen_ref = -tsd.cooling_loads.Qcre_sys[t]
